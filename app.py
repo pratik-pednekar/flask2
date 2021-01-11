@@ -1,101 +1,63 @@
 from flask import Flask, render_template, request, redirect
-
 import requests
 import json
 import pandas as pd
 from datetime import datetime, timedelta
-from bokeh.plotting import figure, output_file, output_notebook, show
+from bokeh.plotting import figure
+from bokeh.embed import components
+#from bokeh.io import output_notebook, push_notebook, show
 
 app = Flask(__name__)
 
 @app.route('/')
-def test():
-	#initialize
-	df = pd.DataFrame()
-	dfs = []
+def home():
+    return render_template('home.html')
 
-	#Get API data from Alphavantage
-	key = 'YG1YG39275HA39T5'
-	ticker = 'AAPL'
-	url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={}&apikey={}'.format(ticker,
-																							 key)
-	response = requests.get(url)																										 																									 key)
-	content = json.loads(response.text)
-	dic = content['Time Series (Daily)']
-	a = pd.DataFrame.from_dict(dic)
-	a = a.transpose()
+@app.route('/plot',methods = ['POST', 'GET'])
+def plot():
+    if request.method=='GET':
+        return "You came here directly, please visit the home page"
+    if request.method=='POST':
 
-	#Manipulating data
-	newcol = []
-	for i in a.columns:
-		s = i.split('. ')[1]
-	newcol.append(s)
-	a.columns = newcol
-	cols = a.columns[a.dtypes.eq("object")]
-	a = a[cols].apply(pd.to_numeric, errors='coerce') \
-	oneMonthLag = datetime.now() - timedelta(days=22)
-	a.index = pd.to_datetime(a.index)
-	c = a.iloc[a.index > oneMonthLag]
+        data=request.form
+        for key,val in data.items():
+            v1 = val
 
-	#Plotting
-	# output to static HTML file #output_notebook()
-	output_file("lines.html")
-	# create a new plot with a title and axis labels
-	p = figure(title="simple line example", x_axis_label='Date', y_axis_label='Stock closing', x_axis_type='datetime')
-	# add a line renderer with legend and line thickness
-	p.line(c.index, c['close'], legend_label="Close", line_width=2)
-	# show the results
-	show(p)
+        # Get API data from Alphavantage
+        key = 'YG1YG39275HA39T5'
+        ticker = 'AAPL'
+        url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={}&apikey={}'.format(ticker,key)
+        response = requests.get(url)
+        content = json.loads(response.text)
+        dic = content['Time Series (Daily)']
+        a = pd.DataFrame.from_dict(dic)
+        a = a.transpose()
 
-@app.route('/about')
-def about():
-  return render_template('about.html')
+        # Manipulating dataframe
+        newcol = []
+        for i in a.columns:
+            s = i.split('. ')[1]
+            newcol.append(s)
+        a.columns = newcol
+        cols = a.columns[a.dtypes.eq("object")]
+        a = a[cols].apply(pd.to_numeric, errors='coerce')
+        oneMonthLag = datetime.now() - timedelta(days=22)
+        a.index = pd.to_datetime(a.index)
+        c = a.iloc[a.index > oneMonthLag]
 
-if __name__ == '__main__':
-  app.run(port=33507)
+        #Plotting using Bokeh
+        p = figure(title="simple line example", x_axis_label='Date', y_axis_label='Stock closing',
+                   x_axis_type='datetime')
+        p.line(c.index, c['close'], legend_label="Close", line_width=2)
+        script,div = components(p)
 
-"""
-from flask import Flask, render_template, request, redirect
-app = Flask(__name__)
+        #return render_template('plot.html',tick=data)
+        return render_template('plot.html', div=div, script=script)
 
-@app.route('/graph',methods=['GET','POST'])
-def graph():
-	ticker = request.form['stock_pick']
-	p,error_message,month,year = plot_stock(ticker)
-	script, div =components(p)
-	kwargs = {'script':script,'div':div}
-	kwargs['title'] = 'Stock Display'
-	kwargs['error_message'] = error_message
-	return render_template('graph.html',**kwargs)
-"""
-
+app.run(host='localhost', port =5000, debug=True)
 
 """
-@app.route('/')
-def index():
-  return render_template('index.html')"""
-
-
-"""
-@app.route('/')
-def index():
-  return render_template('index.html')
-
-@app.route('/about')
-def about():
-  return render_template('about.html')
-
-if __name__ == '__main__':
-  app.run(port=33507)"""
-
-
-
-"""
-@app.route('/', methods=['GET', 'POST']))
-def login():
-    error = None
-    
-    request.form['username']
-                    
-    return request.form['username']
-    """
+m = [1, 2, 3, 4, 5]
+n = [.24, .68, .99, .69, .11]
+p = figure(title="simple line example", x_axis_label='xaxis', y_axis_label='yaxis')
+p.line(m, n, legend_label="Trial", line_width=2)"""
