@@ -54,7 +54,9 @@ def plot():
         #return render_template('plot.html',tick=data)
         return render_template('plot.html', div=div, script=script)
 
-app.run(host='localhost', port =5000, debug=True)
+if __name__='__main__':
+    app.run(debug=True)
+    #app.run(host='localhost', port =5000, debug=True)
 
 """
 m = [1, 2, 3, 4, 5]
