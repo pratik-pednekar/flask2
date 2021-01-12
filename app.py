@@ -54,7 +54,7 @@ def plot():
         #return render_template('plot.html',tick=data)
         return render_template('plot.html', div=div, script=script)
 
-if __name__='__main__':
+if __name__=='__main__':
     app.run(debug=True)
     #app.run(host='localhost', port =5000, debug=True)
 
